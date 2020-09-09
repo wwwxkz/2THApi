@@ -30,7 +30,7 @@
 		public function get($parameters)
 		{
             if(Report::login($parameters) == 'admin') {
-                include_once '../../scripts/conn.php';
+                include_once '../scripts/conn.php';
 
                 $sql = "SELECT * FROM reports ORDER BY id ASC";
                 $sql = $conn->prepare($sql);
@@ -57,7 +57,7 @@
             if($user == 'connector' or $user == 'admin'){
                 $data = $_GET;
                 if(strlen($data['mac']) == 12) {
-                    include_once '../../scripts/conn.php';
+                    include_once '../scripts/conn.php';
 
                     $sql = "SELECT * FROM `reports` WHERE `mac`=\"" . $data['mac'] . "\"";
                     $sql = $conn->prepare($sql);
@@ -88,12 +88,12 @@
                 }
             }
         }
-        public function update()
+        public function update($parameters)
 		{
             if(Report::login($parameters) == 'admin'){
                 $data = $_GET;
                 
-                include_once '../../scripts/conn.php';
+                include_once '../scripts/conn.php';
 
                 try {
                     $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
