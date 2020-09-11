@@ -4,18 +4,18 @@
 	{
         public function login($parameters)
         {
-            require_once '../../../../secure/env.php';
+            $companies = json_decode(file_get_contents("../../../../secure/companies.txt"), true);
             $data = $_GET;
-            if(array_key_exists($data['company'], $companies)) {
+            if(array_key_exists($data['company'], $companies['companies'])) {
                 if($data['user'] == "connector"){
-                    if($data['password'] == $companies[$data['company']]['api_connector_password']){
+                    if($data['password'] == $companies['companies'][$data['company']]['api_connector_password']){
                         return 'connector'; 
                     } else {
                         throw new Exception("This password does not match");
                     }
                 } 
                 elseif($data['user'] == "admin"){
-                    if($data['password'] == $companies[$data['company']]['api_admin_password']){
+                    if($data['password'] == $companies['companies'][$data['company']]['api_admin_password']){
                         return 'admin';
                     } else {
                         throw new Exception("This password does not match");
