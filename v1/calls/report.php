@@ -2,31 +2,7 @@
 
 	class Report
 	{
-        public function login($parameters)
-        {
-            $companies = json_decode(file_get_contents("../../../../secure/companies.txt"), true);
-            $data = $_GET;
-            if(array_key_exists($data['company'], $companies['companies'])) {
-                if($data['user'] == "connector"){
-                    if($data['password'] == $companies['companies'][$data['company']]['api_connector_password']){
-                        return 'connector'; 
-                    } else {
-                        throw new Exception("This password does not match");
-                    }
-                } 
-                elseif($data['user'] == "admin"){
-                    if($data['password'] == $companies['companies'][$data['company']]['api_admin_password']){
-                        return 'admin';
-                    } else {
-                        throw new Exception("This password does not match");
-                    }
-                } else {
-                    throw new Exception("Please, specify a user");
-                }
-            } else {
-                throw new Exception("This company does not exist");
-            }
-        }
+
 		public function get($parameters)
 		{
             if(Report::login($parameters) == 'admin') {
@@ -54,6 +30,7 @@
                 throw new Exception("You do not have permission to use this method");
             }
         }
+
         public function send($parameters)
 		{
             $user = Report::login($parameters);
@@ -92,6 +69,7 @@
                 }
             }
         }
+
         public function update($parameters)
 		{
             if(Report::login($parameters) == 'admin'){
@@ -110,4 +88,7 @@
                 throw new Exception("You do not have permission to use this method");
             }
         }
+
 	}
+
+?>
