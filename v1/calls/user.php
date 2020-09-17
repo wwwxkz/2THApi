@@ -99,22 +99,38 @@
             $data = $_GET;
             // Get user permission and verify if user has permission to update other users information
             // or if it is your own user information
-            $permission = User::login($parameters);
-            if($permission == "admin" or $data['name'] == $data['action']) {
-                include_once '../scripts/conn.php';
-                // Make connection to database as root to be able to update users information
-                $conn = createConn($data['company'], 'root', '');
-                $sql = "UPDATE `users` SET `name`='" . $data['new-name'] . "',`theme`='" . $data['new-theme'] . "',`password`='" . sha1($data['new-password']) . "' WHERE `name`='" . $data['action'] . "'";   
-                if($permission == "admin") {
-                    $sql = "UPDATE `users` SET `name`='" . $data['new-name'] . "',`theme`='" . $data['new-theme'] . "',`type`='" . $data['new-type'] . "',`password`='" . sha1($data['new-password']) . "' WHERE `name`='" . $data['action'] . "'";     
+            $users = User::get($parameters);
+            if(array_key_exists('id', $data)){
+                $permission = User::login($parameters);
+                if($users[$data['index']]['id'] == $data['id']){
+                    if($permission == "admin" or $data['name'] == $data['index']['name']) {
+                        // Make connection to database as root to be able to update users information
+                        include_once '../scripts/conn.php';
+                        $conn = createConn($data['company'], 'root', '');
+                        // Create base string for query
+                        $sql = "UPDATE `users` SET";
+                        // Add query actions as url needs
+                        if(array_key_exists('new-password', $data)){
+                            $sql .= "`password`='" . sha1($data['new-password']) . "'";
+                        }
+                        elseif(array_key_exists('new-theme', $data)){
+                            $sql .= "`theme`='" . $data['new-theme'] . "'";
+                        } else {
+                            // If dont receive any parameters to update
+                            throw new Exception("What do you want to update? i did not get it");
+                        }
+                        // Add to query the user to be updated
+                        $sql .= " WHERE `id`='" . $data['id'] . "'";
+                        $sql = $conn->prepare($sql);
+                        $sql->execute(); 
+                        return "User with name: " . $data['id'] . " updated";
+                    }
+                    throw new Exception("You do not have permission to update any user information except yours");
                 }
-                $sql = $conn->prepare($sql);
-                $sql->execute(); 
-                return "User with name: " . $data['action'] . " updated";
+                throw new Exception("This id or index does not point to any");
             }
-            throw new Exception("You do not have permission to update any user information except yours");
+            throw new Exception("Did not received obligatory parameters");
         }
-
 	}
 
 ?>
