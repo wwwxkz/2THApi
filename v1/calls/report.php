@@ -90,7 +90,7 @@
             return $reports;
         }
 
-        public function send($parameters)
+        public function send()
 		{
             // Get URL parameters
             $data = $_GET;
@@ -103,7 +103,7 @@
             return $received;
         }
 
-        public function update($parameters)
+        public function update()
 		{
             // Get URL parameters
             $data = $_GET;
