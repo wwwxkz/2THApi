@@ -2,14 +2,9 @@
     
 	class Report
 	{
-
-		public function get($parameters)
-		{
-            // Get user.php to use login function and verify user permissions
-            include_once 'user.php';
-            $permissions = User::login($parameters);
-            if($permissions == 'admin') {
-                $data = $_GET;
+        // Factories ################################################################################################
+        private function list($data, $user){
+            if($user['type'] == 'admin') {
                 // Make connection with db as read only
                 include_once '../scripts/conn.php';
                 $conn = createConn($data['company'], 'read', '123');
@@ -31,13 +26,23 @@
             }
         }
 
-        public function send($parameters)
-		{
-            // Get user.php to use login function and verify user permissions
-            include_once 'user.php';
-            $permissions = User::login($parameters);
-            if($permissions == 'connector' or $permissions == 'admin'){
-                $data = $_GET;
+        private function up($data, $user){
+            if($user['type'] == 'admin'){
+                include_once '../scripts/conn.php';
+                $conn = createConn($data['company'], 'root', '');
+                try {
+                    $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
+                    $conn->exec($sql);
+                } catch(PDOException $e) {
+                    echo $sql . "<br>" . $e->getMessage();
+                }
+            } else {
+                throw new Exception("You do not have permission to use this method");
+            }
+        }
+
+        private function receive($data, $user){
+            if($user['type'] == 'connector' or $user['type'] == 'admin'){
                 if(strlen($data['mac']) == 12) {
                     include_once '../scripts/conn.php';
                     $conn = createConn($data['company'], 'connector', '123');
@@ -72,24 +77,44 @@
             }
         }
 
-        public function update($parameters)
-		{
+        // API Calls ################################################################################################
+		public function get(){
+            // Get URL parameters
+            $data = $_GET;
             // Get user.php to use login function and verify user permissions
             include_once 'user.php';
-            $permissions = User::login($parameters);
-            if($permissions == 'admin'){
-                $data = $_GET;
-                include_once '../scripts/conn.php';
-                $conn = createConn($data['company'], 'root', '');
-                try {
-                    $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
-                    $conn->exec($sql);
-                } catch(PDOException $e) {
-                    echo $sql . "<br>" . $e->getMessage();
-                }
-            } else {
-                throw new Exception("You do not have permission to use this method");
-            }
+            // Get user object
+            $user = User::login($data);
+            // Call list function to get reports and return it as a object
+            $reports = Report::list($data, $user);
+            return $reports;
+        }
+
+        public function send($parameters)
+		{
+            // Get URL parameters
+            $data = $_GET;
+            // Get user.php to use login function and verify user permissions
+            include_once 'user.php';
+            // Get user object
+            $user = User::login($data);
+            // Call receive function and return it as a object
+            $received = Report::receive($data, $user);
+            return $received;
+        }
+
+        public function update($parameters)
+		{
+            // Get URL parameters
+            $data = $_GET;
+            // Get user.php to use login function and verify user permissions
+            include_once 'user.php';
+            // Get user object
+            $user = User::login($data);
+            // Call up function and return it as a object
+            $updated = Report::up($data, $user);
+            return $updated;
+
         }
 
 	}

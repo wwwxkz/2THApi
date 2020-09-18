@@ -1,7 +1,6 @@
 <?php
 header('Content-Type: application/json; charset=utf-8');
 
-require_once 'calls/platform.php';
 require_once 'calls/report.php';
 require_once 'calls/user.php';
 

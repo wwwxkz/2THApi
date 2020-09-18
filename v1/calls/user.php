@@ -2,63 +2,58 @@
 
 	class User
 	{
-
-        public function login($parameters)
-        {
+        // Factories ################################################################################################
+        private function signin($data){
             include_once '../scripts/conn.php';
-            // Get URL parameters
-        	$data = $_GET;
             // Search for user in database (as read only db user)
             $conn = createConn($data['company'], 'login', '123');
-            $sql = "SELECT `id`,`name`,`theme`,`type` FROM `users`";
+            $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users`";
             $sql = $conn->prepare($sql);
             $sql->execute();
             $users = array();
             // Go through all users
-            while($row = $sql->fetch(PDO::FETCH_ASSOC)) {
+            while($row = $sql->fetch(PDO::FETCH_ASSOC)){
                 $users[] = $row;
             }
             if (!$users) {
                 throw new Exception("None user in users");
             }
             // Go through all users and verify if it matches the user input
-        	foreach ($users as $key => $value) {
-        		if ($data['name'] == $value['name']){
+        	foreach ($users as $key => $value){
+        		if ($data['user'] == $value['user']){
                     // Make connection with database as root
                     $conn = createConn($data['company'], 'root', '');
-                    // Get user password throught his name
-                    $sql = "SELECT * FROM `users` WHERE name='" . $data['name'] . "'";
+                    // Get user password throught his username
+                    $sql = "SELECT * FROM `users` WHERE user='" . $data['user'] . "'";
                     $sql = $conn->prepare($sql);
                     $sql->execute();
-                    while($row = $sql->fetch(PDO::FETCH_ASSOC)) {
+                    while($row = $sql->fetch(PDO::FETCH_ASSOC)){
                         $results[] = $row;
                     }
-                    if (!$results) {
+                    if (!$results){
                         throw new Exception("Error in database, call the admin");
                     }
                     // Encrypt password input as sha1 (database default)
                     // and verify if user found has the same password as the input
-        			if(sha1($data['password']) == $results[0]['password']){
-						return $results[0]['type'];
+        			if(sha1($data['password']) == $results[0]['password']){					
+                        return $results[0];
         			}
         			throw new Exception("Password does not match");
         		}
-        	}
-        	throw new Exception("User does not exist in this company");
+            }
+            throw new Exception("User does not exist in this company");
         }
 
-        public function get($parameters)
-        {
+        private function list($data, $user){
             // Get URL parameters
         	$data = $_GET;
-            // Get user permission and verify if user has permission to get(read) other users information
-            $permission = User::login($parameters);
-            if($permission == "admin"){
+            // Verify if user has permission to get(read) other users information
+            if($user['type'] == "admin"){
                 include_once '../scripts/conn.php';
                 // Make connection to database as only read user for security reassons
                 $conn = createConn($data['company'], 'read', '123');
                 // Get specif user information, except password
-                $sql = "SELECT `id`,`name`,`theme`,`type` FROM `users`";
+                $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users`";
                 $sql = $conn->prepare($sql);
                 $sql->execute();
                 $results = array();
@@ -72,15 +67,10 @@
                 return $results;
             }
         	throw new Exception("User does not have permission to get(read) other users information");
-    	}
-
-		public function delete($parameters)
-		{
-            // Get URL parameters
-			$data = $_GET;
-            // Get user permission and verify if user has permission to delete other users
-            $permission = User::login($parameters);
-            if($permission == "admin") {
+        }
+        
+        private function del($data, $user){
+            if($user['type'] == "admin") {
                 include_once '../scripts/conn.php';
                 // Make connection to database as root to be able to delete users
                 $conn = createConn($data['company'], 'root', '');
@@ -88,49 +78,77 @@
                 $sql = "DELETE FROM `users` WHERE id='" . $data['id'] . "'";
                 $sql = $conn->prepare($sql);
                 $sql->execute();
-                return "User with id: " . $data['id'] . " deleted";
+                return "User with id: " . $data['id'] . " was deleted";
             }
             throw new Exception("User does not have permission to delete other users");
+        }
+
+        private function up($data, $user){
+            if($user['type'] == "admin" or $user['id'] == $data['id']) {
+                // Make connection to database as root to be able to update users information
+                include_once '../scripts/conn.php';
+                $conn = createConn($data['company'], 'root', '');
+                // Create base string for query
+                $sql = "UPDATE `users` SET";
+                // Add query actions as url needs
+                if(array_key_exists('new-password', $data)){
+                    $sql .= "`password`='" . sha1($data['new-password']) . "'";
+                }
+                elseif(array_key_exists('new-theme', $data)){
+                    $sql .= "`theme`='" . $data['new-theme'] . "'";
+                } else {
+                    // If dont receive any parameters to be updated
+                    throw new Exception("What do you want to update? i did not get it");
+                }
+                // Add to query the user to be updated
+                $sql .= " WHERE `id`='" . $data['id'] . "'";
+                $sql = $conn->prepare($sql);
+                $sql->execute(); 
+                return "User with id: " . $data['id'] . " updated";
+            }
+            throw new Exception("You do not have permission to update any user information except yours");
+        }
+
+        // API Calls ################################################################################################
+        public function login(){
+            // Get URL parameters
+            $data = $_GET;
+            // Get user and return it as a object
+            $user = User::signin($data);
+            return $user;
+        }
+
+        public function get(){
+            // Get URL parameters
+            $data = $_GET;
+            // Get user object
+            $user = User::signin($data);
+            // Pass and parameters to List function and return it as a object
+            $get = User::list($data, $user);
+            return $get;
+        }
+
+		public function delete()
+		{
+            // Get URL parameters
+			$data = $_GET;
+            // Get user object
+            $user = User::signin($data);
+            // Call dell function with credentials in user object and with user to be deleted with data
+            $deleted = User::del($data, $user);
+            return $deleted;
 		}
 
-        public function update($parameters)
+        public function update()
         {
             // Get URL parameters
             $data = $_GET;
-            // Get user permission and verify if user has permission to update other users information
-            // or if it is your own user information
-            $users = User::get($parameters);
-            if(array_key_exists('id', $data)){
-                $permission = User::login($parameters);
-                if($users[$data['index']]['id'] == $data['id']){
-                    if($permission == "admin" or $data['name'] == $data['index']['name']) {
-                        // Make connection to database as root to be able to update users information
-                        include_once '../scripts/conn.php';
-                        $conn = createConn($data['company'], 'root', '');
-                        // Create base string for query
-                        $sql = "UPDATE `users` SET";
-                        // Add query actions as url needs
-                        if(array_key_exists('new-password', $data)){
-                            $sql .= "`password`='" . sha1($data['new-password']) . "'";
-                        }
-                        elseif(array_key_exists('new-theme', $data)){
-                            $sql .= "`theme`='" . $data['new-theme'] . "'";
-                        } else {
-                            // If dont receive any parameters to update
-                            throw new Exception("What do you want to update? i did not get it");
-                        }
-                        // Add to query the user to be updated
-                        $sql .= " WHERE `id`='" . $data['id'] . "'";
-                        $sql = $conn->prepare($sql);
-                        $sql->execute(); 
-                        return "User with name: " . $data['id'] . " updated";
-                    }
-                    throw new Exception("You do not have permission to update any user information except yours");
-                }
-                throw new Exception("This id or index does not point to any");
-            }
-            throw new Exception("Did not received obligatory parameters");
+            // Get user object
+            $user = User::signin($data);
+            // Call up function and return results as object
+            $updated = User::up($data, $user);
+            return $updated;
+
         }
 	}
-
 ?>
