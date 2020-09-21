@@ -29,6 +29,7 @@
         private function up($data, $user){
             if($user['type'] == 'admin'){
                 include_once '../scripts/conn.php';
+                // Make connection as root to be able to update reports
                 $conn = createConn($data['company'], 'root', '');
                 try {
                     $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
@@ -77,6 +78,22 @@
             }
         }
 
+        private function del($data, $user){
+            if($user['type'] == 'admin'){
+                include_once '../scripts/conn.php';
+                // Make connection as root to be able to delete reports
+                $conn = createConn($data['company'], 'root', '');
+                try {
+                    $sql = "DELETE FROM `reports` WHERE id=" . $data['id'];
+                    $conn->exec($sql);
+                } catch(PDOException $e) {
+                    echo $sql . "<br>" . $e->getMessage();
+                }
+            } else {
+                throw new Exception("You do not have permission to use this method");
+            }
+        }
+
         // API Calls ################################################################################################
 		public function get(){
             // Get URL parameters
@@ -115,6 +132,19 @@
             $updated = Report::up($data, $user);
             return $updated;
 
+        }
+
+        public function delete()
+        {
+            // Get URL parameters
+            $data = $_GET;
+            // Get user.php to use login function and verify user permissions
+            include_once 'user.php';
+            // Get user object
+            $user = User::login($data);
+            // Call dell function to delete user and return it as a object
+            $deleted = Report::del($data, $user);
+            return $deleted;
         }
 
 	}
