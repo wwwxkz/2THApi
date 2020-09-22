@@ -7,9 +7,14 @@
             if($user['type'] == 'admin') {
                 // Make connection with db as read only
                 include_once '../scripts/conn.php';
-                $conn = createConn($data['company'], 'read', '123');
-                // Select all reports and order
+                $conn = createConn($data['company'], 'read', '123');         
+                // Verify if the request specify an id
+                // If do not, select all reports and order
                 $sql = "SELECT * FROM reports ORDER BY id ASC";
+                // Use id if exist
+                if(isset($data['id'])){
+                    $sql = "SELECT * FROM reports WHERE `id`=" . $data['id'];
+                }
                 $sql = $conn->prepare($sql);
                 $sql->execute();
                 $results = array();
@@ -31,15 +36,19 @@
                 include_once '../scripts/conn.php';
                 // Make connection as root to be able to update reports
                 $conn = createConn($data['company'], 'root', '');
-                try {
-                    $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
-                    $conn->exec($sql);
-                } catch(PDOException $e) {
-                    echo $sql . "<br>" . $e->getMessage();
+                if(isset($data['name'], $data['tag'], $data['groups'], $data['id'])){
+                    try {
+                        $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
+                        $conn->exec($sql);
+                        return "User with id: " . $data['id'] . " updated";
+                    } catch(PDOException $e) {
+                        throw new Exception("Database error, contact the administrator");
+                        // echo $sql . "<br>" . $e->getMessage();
+                    }
                 }
-            } else {
-                throw new Exception("You do not have permission to use this method");
+                throw new Exception("ID is not set");
             }
+            throw new Exception("You do not have permission to use this method");
         }
 
         private function receive($data, $user){
@@ -57,18 +66,20 @@
                         try {   
                             $sql = "UPDATE `reports` SET `lat`=" . $data['lat'] . ",`lon`=" . $data['lon'] . ",`date`='" . date("Y-m-d") . "' WHERE `mac`='" . $data['mac'] . "'";
                             $conn->exec($sql);
-                            echo "Record updated successfully";
+                            return "Record updated successfully";
                         } catch(PDOException $e) {
-                            echo $sql . "<br>" . $e->getMessage();
+                            throw new Exception("Database error, contact the administrator");
+                            //echo $sql . "<br>" . $e->getMessage();
                         }
                     } else {   
                         echo 'Does not exist';
                         try {
                             $sql = "INSERT INTO `reports`(`mac`, `lat`, `lon`, `date`) VALUES (\"" . $data['mac'] . "\"," . $data['lat'] . "," . $data['lon'] . ",'" . date("Y-m-d") . "')";
                             $conn->exec($sql);
-                            echo "New report created successfully";
+                            return "New report created successfully";
                         } catch(PDOException $e) {
-                            echo $sql . "<br>" . $e->getMessage();
+                            throw new Exception("Database error, contact the administrator");
+                            //echo $sql . "<br>" . $e->getMessage();
                         }
                     }
                     $conn = null;
@@ -83,12 +94,17 @@
                 include_once '../scripts/conn.php';
                 // Make connection as root to be able to delete reports
                 $conn = createConn($data['company'], 'root', '');
-                try {
-                    $sql = "DELETE FROM `reports` WHERE id=" . $data['id'];
-                    $conn->exec($sql);
-                } catch(PDOException $e) {
-                    echo $sql . "<br>" . $e->getMessage();
+                if(isset($data['id'])){
+                    try {
+                        $sql = "DELETE FROM `reports` WHERE id=" . $data['id'];
+                        $conn->exec($sql);
+                        return "User with id: " . $data['id'] . " deleted";
+                    } catch(PDOException $e) {
+                        throw new Exception("Database error, contact the administrator");
+                        //echo $sql . "<br>" . $e->getMessage();
+                    }
                 }
+                throw new Exception("Id is not set");
             } else {
                 throw new Exception("You do not have permission to use this method");
             }

@@ -4,27 +4,27 @@
 	{
         // Factories ################################################################################################
         private function signin($data){
-            include_once '../scripts/conn.php';
-            // Search for user in database (as read only db user)
-            $conn = createConn($data['company'], 'login', '123');
-            $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users`";
-            $sql = $conn->prepare($sql);
-            $sql->execute();
-            $users = array();
-            // Go through all users
-            while($row = $sql->fetch(PDO::FETCH_ASSOC)){
-                $users[] = $row;
-            }
-            if (!$users) {
-                throw new Exception("None user in users");
-            }
-            // Go through all users and verify if it matches the user input
-        	foreach ($users as $key => $value){
-        		if ($data['user'] == $value['user']){
+            if(isset($data['user'], $data['company'], $data['password'])){
+                include_once '../scripts/conn.php';
+                // Search for user in database (as read only db user)
+                $conn = createConn($data['company'], 'login', '123');
+                $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users` WHERE `user`='" . $data['user'] . "'";
+                $sql = $conn->prepare($sql);
+                $sql->execute();
+                $users = array();
+                // Go through all results
+                while($row = $sql->fetch(PDO::FETCH_ASSOC)){
+                    $users[] = $row;
+                }
+                if (!$users) {
+                    throw new Exception("None user in users");
+                }
+                // Go through all users and verify if it matches the user input
+                foreach ($users as $key => $value){
                     // Make connection with database as root
                     $conn = createConn($data['company'], 'root', '');
                     // Get user password throught his username
-                    $sql = "SELECT * FROM `users` WHERE user='" . $data['user'] . "'";
+                    $sql = "SELECT * FROM `users` WHERE `user`='" . $data['user'] . "'";
                     $sql = $conn->prepare($sql);
                     $sql->execute();
                     while($row = $sql->fetch(PDO::FETCH_ASSOC)){
@@ -35,18 +35,16 @@
                     }
                     // Encrypt password input as sha1 (database default)
                     // and verify if user found has the same password as the input
-        			if(sha1($data['password']) == $results[0]['password']){					
+                    if(sha1($data['password']) == $results[0]['password']){					
                         return $results[0];
-        			}
-        			throw new Exception("Password does not match");
-        		}
+                    }
+                    throw new Exception("Password does not match");		
+                }
+                throw new Exception("User does not exist in this company");
             }
-            throw new Exception("User does not exist in this company");
         }
 
         private function list($data, $user){
-            // Get URL parameters
-        	$data = $_GET;
             // Verify if user has permission to get(read) other users information
             if($user['type'] == "admin"){
                 include_once '../scripts/conn.php';
@@ -54,6 +52,9 @@
                 $conn = createConn($data['company'], 'read', '123');
                 // Get specif user information, except password
                 $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users`";
+                if(isset($data['id'])){
+                    $sql = "SELECT `id`,`user`,`theme`,`type` FROM `users` WHERE `id`='" . $data['id'] . "'";
+                }
                 $sql = $conn->prepare($sql);
                 $sql->execute();
                 $results = array();
@@ -70,7 +71,7 @@
         }
         
         private function del($data, $user){
-            if($user['type'] == "admin") {
+            if($user['type'] == "admin" and isset($data['id'])) {
                 include_once '../scripts/conn.php';
                 // Make connection to database as root to be able to delete users
                 $conn = createConn($data['company'], 'root', '');
