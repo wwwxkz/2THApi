@@ -43,7 +43,6 @@
                         return "User with id: " . $data['id'] . " updated";
                     } catch(PDOException $e) {
                         throw new Exception("Database error, contact the administrator");
-                        // echo $sql . "<br>" . $e->getMessage();
                     }
                 }
                 throw new Exception("ID is not set");
@@ -56,30 +55,43 @@
                 if(strlen($data['mac']) == 12) {
                     include_once '../scripts/conn.php';
                     $conn = createConn($data['company'], 'connector', '123');
-
                     $sql = "SELECT * FROM `reports` WHERE `mac`=\"" . $data['mac'] . "\"";
                     $sql = $conn->prepare($sql);
                     $sql->execute();
-
-                    if ($sql->fetch(PDO::FETCH_ASSOC) == true){
-                        echo 'Exist';
-                        try {   
-                            $sql = "UPDATE `reports` SET `lat`=" . $data['lat'] . ",`lon`=" . $data['lon'] . ",`date`='" . date("Y-m-d") . "' WHERE `mac`='" . $data['mac'] . "'";
+                    $results = array();
+                    while($row = $sql->fetch(PDO::FETCH_ASSOC)) {
+                        $results[] = $row;
+                    }
+                    // Report exist
+                    if ($results){
+                        $arr = json_decode($results[0]['locations']);
+                        $arr[] = ['date' => date("Y-m-d"), 'lat' => $data['lat'], 'lon'  => $data['lon']];
+                        $locations = json_encode($arr);
+                        try {
+                            $sql = "UPDATE `reports` SET `locations`='" . $locations . "' WHERE `mac`='" . $data['mac'] . "'";
                             $conn->exec($sql);
+                            return $sql;
                             return "Record updated successfully";
                         } catch(PDOException $e) {
                             throw new Exception("Database error, contact the administrator");
-                            //echo $sql . "<br>" . $e->getMessage();
                         }
-                    } else {   
-                        echo 'Does not exist';
+                    }
+                    // Report does not exist, create one instead
+                    if (!$results) {
+                        $arr = array(
+                            array(
+                                'date' => date("Y-m-d"),
+                                'lat' => $data['lat'],
+                                'lon' => $data['lon']
+                            )
+                        );
+                        $locations = json_encode($arr);
                         try {
-                            $sql = "INSERT INTO `reports`(`mac`, `lat`, `lon`, `date`) VALUES (\"" . $data['mac'] . "\"," . $data['lat'] . "," . $data['lon'] . ",'" . date("Y-m-d") . "')";
+                            $sql = "INSERT INTO `reports`(`mac`, `locations`) VALUES (\"" . $data['mac'] . "\",'" . $locations . "')";
                             $conn->exec($sql);
                             return "New report created successfully";
                         } catch(PDOException $e) {
                             throw new Exception("Database error, contact the administrator");
-                            //echo $sql . "<br>" . $e->getMessage();
                         }
                     }
                     $conn = null;
@@ -101,7 +113,6 @@
                         return "User with id: " . $data['id'] . " deleted";
                     } catch(PDOException $e) {
                         throw new Exception("Database error, contact the administrator");
-                        //echo $sql . "<br>" . $e->getMessage();
                     }
                 }
                 throw new Exception("Id is not set");
