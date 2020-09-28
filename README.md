@@ -36,12 +36,24 @@ company
 / reports 
 id - autoincrement
 mac - varchar(12)
-lat - float
-lon - float
-date - date
 name - varchar(64)
 tag - varchar(32)
 groups - varchar(128)
+locations - JSON 
+'''
+{
+    {
+      "date": "20-20-20",
+      "lat": "20",
+      "lon": "-20"
+    },
+    {
+      "date": "10-10-15",
+      "lat": "15",
+      "lon": "-15"
+    }
+}
+'''
 
 / users
 id - autoincrement
@@ -49,7 +61,6 @@ name - varchar(16)
 theme - varchar(8)
 type - varchar(8)
 password - varchar(64)
-
 
 # Db users
 
@@ -62,6 +73,12 @@ user: read
 pass: 123
 permissions: 
 - read acess to all (except for user 'password')
+
+user: connector
+pass: 123
+permissions:
+- read acess to all reports
+- insert and update acess to all reports
 
 user: root (default root user of mysql)
 
