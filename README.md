@@ -21,11 +21,11 @@ MAC:1116144D4DFB
 LAT:-21.0059731
 LON:26.77222188
 
-http://localhost/2THPlatform/api/v1/report/send/?company=2TH&password=TestPassword&name=connector?mac=1116144D4DFB&lat=-21.0059731&lon=26.77222188
+http://localhost/api/v1/report/send/?company=2TH&password=123&user=giovana&mac=1A2B3C4D5F6F&lat=21.21&lon=12.21&tel=12313131231&model=ASUSXB00&manufacturer=ASUS
 
 * Login
-/login/?company=2TH&name=pedro&password=testepassword
-/login/?company=CompanyNew&name=chris&password=passtest
+/login/?company=2TH&user=pedro&password=testepassword
+/login/?company=Company&user=chris&password=passtest
 
 * Update
 
@@ -54,6 +54,9 @@ locations - JSON
     }
 }
 '''
+telephone - varchar(32)
+model - varchar(32)
+manufacturer - varchar(32)
 
 / users
 id - autoincrement

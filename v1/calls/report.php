@@ -38,7 +38,7 @@
                 $conn = createConn($data['company'], 'root', '');
                 if(isset($data['name'], $data['tag'], $data['groups'], $data['id'])){
                     try {
-                        $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\" WHERE id =" . $data['id'];   
+                        $sql = "UPDATE `reports` SET `name`=\"" . $data['name'] . "\",`tag`=\"" . $data['tag'] . "\",`groups`=\"" . $data['groups'] . "\",`telephone`=\"" . $data['tel'] . "\" WHERE id =" . $data['id'];   
                         $conn->exec($sql);
                         return "User with id: " . $data['id'] . " updated";
                     } catch(PDOException $e) {
@@ -68,9 +68,8 @@
                         $arr[] = ['date' => date("Y-m-d"), 'lat' => $data['lat'], 'lon'  => $data['lon']];
                         $locations = json_encode($arr);
                         try {
-                            $sql = "UPDATE `reports` SET `locations`='" . $locations . "' WHERE `mac`='" . $data['mac'] . "'";
+                            $sql = "UPDATE `reports` SET `locations`='" . $locations . "', `telephone`='" . $data['tel'] . "' WHERE `mac`='" . $data['mac'] . "'";
                             $conn->exec($sql);
-                            return $sql;
                             return "Record updated successfully";
                         } catch(PDOException $e) {
                             throw new Exception("Database error, contact the administrator");
@@ -87,7 +86,7 @@
                         );
                         $locations = json_encode($arr);
                         try {
-                            $sql = "INSERT INTO `reports`(`mac`, `locations`) VALUES (\"" . $data['mac'] . "\",'" . $locations . "')";
+                            $sql = "INSERT INTO `reports`(`mac`, `locations`, `telephone`, `manufacturer`, `model`) VALUES (\"" . $data['mac'] . "\",'" . $locations . "','" . $data['tel'] . "','" . $data['manufacturer'] . "','" . $data['model'] . "')";
                             $conn->exec($sql);
                             return "New report created successfully";
                         } catch(PDOException $e) {
