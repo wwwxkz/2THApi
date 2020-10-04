@@ -57,6 +57,8 @@ locations - JSON
 telephone - varchar(32)
 model - varchar(32)
 manufacturer - varchar(32)
+downloaded - int
+uploaded - int
 
 / users
 id - autoincrement

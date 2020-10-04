@@ -68,7 +68,7 @@
                         $arr[] = ['date' => date("Y-m-d"), 'lat' => $data['lat'], 'lon'  => $data['lon']];
                         $locations = json_encode($arr);
                         try {
-                            $sql = "UPDATE `reports` SET `locations`='" . $locations . "', `telephone`='" . $data['tel'] . "' WHERE `mac`='" . $data['mac'] . "'";
+                            $sql = "UPDATE `reports` SET `locations`='" . $locations . "', `downloaded`='" . $data['downloaded'] . "', `uploaded`='" . $data['uploaded'] . "', `telephone`='" . $data['tel'] . "' WHERE `mac`='" . $data['mac'] . "'";
                             $conn->exec($sql);
                             return "Record updated successfully";
                         } catch(PDOException $e) {
@@ -86,7 +86,7 @@
                         );
                         $locations = json_encode($arr);
                         try {
-                            $sql = "INSERT INTO `reports`(`mac`, `locations`, `telephone`, `manufacturer`, `model`) VALUES (\"" . $data['mac'] . "\",'" . $locations . "','" . $data['tel'] . "','" . $data['manufacturer'] . "','" . $data['model'] . "')";
+                            $sql = "INSERT INTO `reports`(`mac`, `locations`, `telephone`, `manufacturer`, `model`, `downloaded`, `uploaded`) VALUES (\"" . $data['mac'] . "\",'" . $locations . "','" . $data['tel'] . "','" . $data['manufacturer'] . "','" . $data['model'] . "','" . $data['downloaded'] . "','" . $data['uploaded'] . "')";
                             $conn->exec($sql);
                             return "New report created successfully";
                         } catch(PDOException $e) {
