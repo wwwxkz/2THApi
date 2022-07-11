@@ -1,4 +1,86 @@
-# 2THApi
+# Install
+
+### Automatic
+Use install.sh for setting up db, tables, and users
+```
+chmod +x install.sh
+./install -c 
+./install -a
+```
+For help you can use
+```
+./install -h
+```
+For instance
+```
+Server config has to be made manually
+Database users created by the script have total access to your database, it is highly recommended that you setup users manually 
+Users here have the same name and password, but more permissions than the ones described below
+```
+
+### Manual
+
+Database
+
+In order to setup, you need to set these tables, and users. You can change the password or better, create a new user to any task, and even create new taks and read just users, or read just reports, it is up to you and recommended for security reassons
+
+Database -> company 
+
+Table -> reports 
+```
+id - autoincrement
+mac - varchar(12)
+name - varchar(64)
+tag - varchar(32)
+groups - varchar(128)
+locations - JSON 
+telephone - varchar(32)
+model - varchar(32)
+manufacturer - varchar(32)
+downloaded - int
+uploaded - int
+```
+Table -> users
+```
+id - autoincrement
+user - varchar(16)
+theme - varchar(8)
+type - varchar(8)
+password - varchar(64)
+```
+
+Database users 
+User -> login
+```
+- Password -> 123
+- Permissions
+  - table 'users' in the 'id' specified, 'name', 'theme', 'type'
+```
+
+User -> read
+```
+- Password -> 123
+- Permissions
+  - read acess to all (except for user 'password')
+```
+
+User -> connector
+```
+- Password -> 123
+- Permissions
+  - read acess to all reports
+  - insert and update acess to all reports
+```
+
+User -> root 
+```
+- Password -> (in my case none, it depends on your instalation)
+- Permissions
+  - default root user of mysql, default permission
+```
+
+
+# API
 
 Classes
 ```
@@ -52,7 +134,7 @@ User
 http://localhost/2THPlatform/api/v1/user/update/?company=2TH&name=pedro&password=testepassword&new-name=alberto&new-type=admin&new-password=teste&action=chris&new-theme=dark
 ```
 
-# Server config
+### Server config
 
 .env
 
@@ -62,7 +144,7 @@ Setup inside 2THPlatform root folder
 $key_map = 'google_maps_api_key';
 ```
 
-# Acess
+### Acess
 Base url
 ```
 http://localhost/2THPlatform
